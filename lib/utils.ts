@@ -1,20 +1,28 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { SavedHistory } from '@/data/savedHistory';
+import { Session } from '@/lib/types'
+import { auth } from '@/auth'
+import { Chat } from './types'
+import { kv } from '@vercel/kv'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Function to save search history
-export function saveSearchHistory(savedHistory: SavedHistory[] = []) {
-  // Check if localStorage is defined
-  if (typeof localStorage !== 'undefined') {
-    // Convert the search history array into a JSON string
-    const savedHistoryJSON = JSON.stringify(savedHistory);
+export async function saveChat(chat: Chat) {
+  const session = (await auth()) as Session
 
-    // Save the JSON string in localStorage
-    localStorage.setItem('savedHistory', savedHistoryJSON);
+  if (session && session.user) {
+    const pipeline = kv.pipeline();
+    pipeline.hmset(`chat:${chat.id}`, chat);
+    pipeline.zadd(`user:chat:${chat.userId}`, {
+      score: Date.now(),
+      member: `chat:${chat.id}`
+    });
+    await pipeline.exec();
+  } else {
+    return;
   }
 }
 
