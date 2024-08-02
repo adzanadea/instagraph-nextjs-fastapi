@@ -95,7 +95,7 @@ export default function IndexPage() {
     let currentEdges: ChatEdge[] = []
 
     try {
-      const baseUrl = process.env.NODE_ENV === 'development' ? 'http://127.0.0.1:8000' : 'https://instagraph-fast-api.onrender.com'
+      const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL
       const url = `${baseUrl}/api/get_graph/${encodeURIComponent(userInput)}`
 
       const ees = new EventSource(url)
